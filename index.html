@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>감염병 예방 OX 퀴즈</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DotGothic16', sans-serif;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: white;
+            border: 8px solid #333;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 0 0 4px #fff;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+            image-rendering: pixelated;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 28px;
+            color: #ff6b6b;
+            text-shadow: 3px 3px 0 #333;
+            margin-bottom: 15px;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .score-item {
+            background: #fff3cd;
+            border: 4px solid #333;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 4px 4px 0 #333;
+            flex: 1;
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            font-size: 24px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .timer {
+            background: #ffcccb;
+        }
+
+        .timer.warning {
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .question-container {
+            background: #e3f2fd;
+            border: 4px solid #333;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 4px 4px 0 #333;
+            position: relative;
+        }
+
+        .question-text {
+            font-size: 20px;
+            color: #333;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 32px;
+            padding: 20px 50px;
+            border: 4px solid #333;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 6px 6px 0 #333;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 4px 4px 0 #333;
+        }
+
+        .btn:active {
+            transform: translate(6px, 6px);
+            box-shadow: 0 0 0 #333;
+        }
+
+        .btn-o {
+            background: #81c784;
+            color: white;
+        }
+
+        .btn-x {
+            background: #e57373;
+            color: white;
+        }
+
+        .hint {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .result-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: white;
+            border: 6px solid #333;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            min-width: 300px;
+        }
+
+        .result-message.show {
+            animation: popIn 0.3s forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .result-message.correct {
+            background: #c8e6c9;
+        }
+
+        .result-message.wrong {
+            background: #ffcdd2;
+        }
+
+        .result-title {
+            font-size: 28px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+        }
+
+        .result-text {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .virus {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            background: #ff4444;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .virus::before,
+        .virus::after {
+            content: '';
+            position: absolute;
+            background: #ff4444;
+        }
+
+        .virus::before {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            top: -6px;
+            left: 5px;
+            box-shadow: 20px 0 0 #ff4444, 5px 10px 0 #ff4444, 20px 30px 0 #ff4444;
+        }
+
+        .virus::after {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            top: 5px;
+            left: -6px;
+            box-shadow: 30px 5px 0 #ff4444, 10px 20px 0 #ff4444, 25px 25px 0 #ff4444;
+        }
+
+        .final-result {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .final-result.show {
+            display: flex;
+        }
+
+        .final-card {
+            background: white;
+            border: 8px solid #333;
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: slideDown 0.5s;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .final-title {
+            font-size: 36px;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 0 #333;
+        }
+
+        .final-score {
+            font-size: 48px;
+            color: #4caf50;
+            margin: 20px 0;
+        }
+
+        .final-message {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .restart-btn {
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 20px;
+            padding: 15px 40px;
+            background: #ffd54f;
+            border: 4px solid #333;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 6px 6px 0 #333;
+            transition: all 0.1s;
+        }
+
+        .restart-btn:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 4px 4px 0 #333;
+        }
+
+        @keyframes virusSpread {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        .particle {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: #ff4444;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 999;
+            animation: virusSpread 1s forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="title">🦠 감염병 예방 OX 퀴즈 🦠</div>
+        </div>
+
+        <div class="score-board">
+            <div class="score-item">
+                <div class="score-label">예방력</div>
+                <div class="score-value" id="score">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">문제</div>
+                <div class="score-value" id="question-number">1/10</div>
+            </div>
+            <div class="score-item timer" id="timer-display">
+                <div class="score-label">시간</div>
+                <div class="score-value" id="timer">30</div>
+            </div>
+        </div>
+
+        <div class="question-container">
+            <div class="question-text" id="question"></div>
+        </div>
+
+        <div class="buttons-container">
+            <button class="btn btn-o" onclick="checkAnswer(true)">O</button>
+            <button class="btn btn-x" onclick="checkAnswer(false)">X</button>
+        </div>
+
+        <div class="hint">키보드 O 또는 X 키로도 답할 수 있어요!</div>
+    </div>
+
+    <div class="result-message" id="result-message"></div>
+    
+    <div class="final-result" id="final-result">
+        <div class="final-card">
+            <div class="final-title">🎉 게임 종료! 🎉</div>
+            <div class="final-score" id="final-score"></div>
+            <div class="final-message" id="final-message"></div>
+            <button class="restart-btn" onclick="restartGame()">다시 도전하기</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { text: "기침할 땐 손바닥으로 입을 가려야 한다", answer: false, explanation: "팔꿈치 안쪽으로 가려야 해요!" },
+            { text: "외출 후 손을 씻는 것은 감염병 예방에 효과적이다", answer: true, explanation: "손 씻기는 최고의 예방법!" },
+            { text: "마스크는 턱에 걸쳐도 괜찮다", answer: false, explanation: "코와 입을 완전히 가려야 해요!" },
+            { text: "비누로 30초 이상 손을 씻어야 효과적이다", answer: true, explanation: "꼼꼼하게 30초 이상!" },
+            { text: "환기는 감염병 예방에 도움이 되지 않는다", answer: false, explanation: "환기는 매우 중요해요!" },
+            { text: "기침이나 재채기 후에는 손을 씻어야 한다", answer: true, explanation: "바이러스 전파 예방!" },
+            { text: "사람이 많은 곳에서는 마스크를 쓰지 않아도 된다", answer: false, explanation: "밀집된 곳에선 필수!" },
+            { text: "손을 씻을 때 물로만 씻어도 충분하다", answer: false, explanation: "비누를 사용해야 해요!" },
+            { text: "눈, 코, 입을 만지기 전에 손을 씻어야 한다", answer: true, explanation: "얼굴 접촉 전 손 소독!" },
+            { text: "감기 증상이 있어도 마스크 없이 외출해도 된다", answer: false, explanation: "증상 있을 땐 마스크 필수!" },
+            { text: "손 소독제는 손 씻기를 완전히 대체할 수 있다", answer: false, explanation: "손 씻기가 가장 좋아요!" },
+            { text: "재채기할 때 휴지나 손수건을 사용하는 것이 좋다", answer: true, explanation: "일회용 휴지가 최고!" },
+            { text: "실내에서는 2시간마다 환기하는 것이 좋다", answer: true, explanation: "자주 환기해주세요!" },
+            { text: "마스크를 착용하면 손을 씻지 않아도 된다", answer: false, explanation: "둘 다 중요해요!" }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let timeLeft = 30;
+        let timerInterval;
+        let usedQuestions = [];
+
+        function shuffleQuestions() {
+            questions.sort(() => Math.random() - 0.5);
+            usedQuestions = questions.slice(0, 10);
+        }
+
+        function startGame() {
+            shuffleQuestions();
+            currentQuestion = 0;
+            score = 0;
+            timeLeft = 30;
+            updateDisplay();
+            loadQuestion();
+            startTimer();
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+                
+                if (timeLeft <= 10) {
+                    document.getElementById('timer-display').classList.add('warning');
+                }
+                
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            if (currentQuestion >= usedQuestions.length) {
+                endGame();
+                return;
+            }
+            
+            const question = usedQuestions[currentQuestion];
+            document.getElementById('question').textContent = question.text;
+            document.getElementById('question-number').textContent = `${currentQuestion + 1}/10`;
+        }
+
+        function checkAnswer(userAnswer) {
+            const question = usedQuestions[currentQuestion];
+            const isCorrect = userAnswer === question.answer;
+            
+            if (isCorrect) {
+                score++;
+                showResult(true, question.explanation);
+                updateDisplay();
+            } else {
+                showResult(false, question.explanation);
+                createVirusEffect();
+            }
+            
+            currentQuestion++;
+            
+            setTimeout(() => {
+                hideResult();
+                if (currentQuestion < usedQuestions.length && timeLeft > 0) {
+                    loadQuestion();
+                } else {
+                    endGame();
+                }
+            }, 1500);
+        }
+
+        function showResult(isCorrect, explanation) {
+            const resultDiv = document.getElementById('result-message');
+            resultDiv.className = 'result-message show ' + (isCorrect ? 'correct' : 'wrong');
+            
+            if (isCorrect) {
+                resultDiv.innerHTML = `
+                    <div class="result-title">✨ 정답! ✨</div>
+                    <div class="result-text">예방력 +1</div>
+                    <div class="result-text">${explanation}</div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="result-title">❌ 오답! ❌</div>
+                    <div class="result-text">${explanation}</div>
+                `;
+            }
+        }
+
+        function hideResult() {
+            const resultDiv = document.getElementById('result-message');
+            resultDiv.className = 'result-message';
+        }
+
+        function createVirusEffect() {
+            const container = document.querySelector('.game-container');
+            const rect = container.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            for (let i = 0; i < 12; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const angle = (i / 12) * Math.PI * 2;
+                const distance = 200;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                
+                particle.style.left = centerX + 'px';
+                particle.style.top = centerY + 'px';
+                particle.style.setProperty('--tx', tx + 'px');
+                particle.style.setProperty('--ty', ty + 'px');
+                
+                document.body.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 1000);
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            
+            let message = '';
+            if (score >= 9) {
+                message = '🏆 완벽해요! 감염병 예방 마스터!';
+            } else if (score >= 7) {
+                message = '😊 잘했어요! 예방 수칙을 잘 알고 계시네요!';
+            } else if (score >= 5) {
+                message = '👍 괜찮아요! 조금만 더 공부해봐요!';
+            } else {
+                message = '💪 다시 도전해보세요! 예방 수칙을 배워봐요!';
+            }
+            
+            document.getElementById('final-score').textContent = `${score} / 10점`;
+            document.getElementById('final-message').textContent = message;
+            document.getElementById('final-result').classList.add('show');
+        }
+
+        function restartGame() {
+            document.getElementById('final-result').classList.remove('show');
+            document.getElementById('timer-display').classList.remove('warning');
+            startGame();
+        }
+
+        // 키보드 이벤트
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'o') {
+                checkAnswer(true);
+            } else if (e.key.toLowerCase() === 'x') {
+                checkAnswer(false);
+            }
+        });
+
+        // 게임 시작
+        startGame();
+    </script>
+</body>
+</html>
